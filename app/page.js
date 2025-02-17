@@ -1,4 +1,6 @@
 "use client";
+// const Flats = lazy(() => import("./flats/page.js"));
+// import { Suspense , lazy  } from "react";
 import Flats from "./flats/page";
 import SearchField from "./flats/searchField";
 import { useState, useEffect } from "react";
@@ -6,7 +8,10 @@ import getAllFlats from "@/lib/fetching-data";
 import { FetchAll } from "@/lib/fetching-data";
 import Pagination from "./flats/pagination";
 import { mapKeys } from "lodash";
+import {Cities} from "../utilis/cities.js"
+
 export default function Home() {
+  
   // handle flats state changes
   const [flats, setFlats] = useState([]);
   // handle loading state changes
@@ -67,21 +72,25 @@ export default function Home() {
   
   const handleFetchAll = async () => {
     try {
+      setLoadings(true);
       const data = await FetchAll();
       setFlats(data.data.items);
+      setLoadings(false);
     } catch (error) {
+      setLoadings(false);
       setError(error);
       console.error("Error:", error);
     }
   };
   // handle search function call on params change
   const handleSearch = async () => {
-    try {
+    try { 
+      setLoadings(true);
       const data = await getAllFlats(params);
       setFlats(data.data.items);
+      setLoadings(false);
       console.log(renamedParams)
       console.log(params)
-      
       setClicked({
         limit: false,
         page: false,
@@ -97,7 +106,9 @@ export default function Home() {
       });
     } catch (error) {
       setError(error);
+      setLoadings(false);
       console.error("Error:", error);
+      
     }
   };
 
@@ -129,14 +140,30 @@ export default function Home() {
   const lastFlatIndex = currentPage*totalFlatsPerPage;
   const firstFlatIndex = lastFlatIndex - totalFlatsPerPage;
   const currentFlats = flats.slice(firstFlatIndex, lastFlatIndex);
+
+    function  handleSelectCity(value){
+      console.log(value)
+      setParams((prevParams) => {
+        return {...prevParams, city: Number(value) };
+      });
+    }
   return (
     <>
       <div className="container max-w-6xl mx-auto   mt-9">
         <div className="params">
           {Object.entries(renamedParams).map(([key, value]) => {
             if (key === "limit") {
+
               return;
+
             } else {
+              if(key ===  "city"){
+               
+                return <select  defaultValue="city" className="select" key={key} onChange={(e)=>handleSelectCity(e.target.value)}>
+                  <option className="option" value="city" selected disabled>City</option>
+                  {Cities.map((c,i)=><option className="option" value={c.id} key={i}>{c.name}</option>)}
+                </select>
+              }
               return (
                 <SearchField
                   key={key}
@@ -163,12 +190,18 @@ export default function Home() {
         </div>
       </div>
 
-      <div>
-        <Flats flats={currentFlats} />
-      </div>
-      <div> 
+   
+  
+       {loadings ? (
+        <p className="loading">Loading Flats...</p>
+      ) : (
+        
+        <div> 
+          <Flats flats={currentFlats} />
         <Pagination totalFlats={flats.length} currentPage={currentPage} totalFlatsPerPage={totalFlatsPerPage} setCurrentPage={setCurrentPage} />
       </div>
+      )}
+     
     </>
   );
 }

@@ -2,6 +2,7 @@ import Flat from "./flat";
 export default function Flats({flats}) {
  
   return (<>
+  
 <div className="container max-w-6xl mx-auto   mt-9">
     <div className="grid  grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mx-auto place-items-center">
       {flats && flats.map((item) => 
